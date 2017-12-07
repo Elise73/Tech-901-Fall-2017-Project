@@ -1,6 +1,8 @@
 import time
+from cs50 import SQL
 from flask import Flask, redirect, render_template, request, session, url_for
 from flask_session import Session
+from passlib.apps import custom_app_context as pwd_context
 from tempfile import mkdtemp
 from helpers import *
 
@@ -25,8 +27,11 @@ app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
+# configure CS50 Library to use SQLite database
+db = SQL("sqlite:///helpdesk.db")
+
 @app.route("/")
-#@login_required
+@login_required
 def index():
     """Home Page"""
     return render_template("index.html")
@@ -87,6 +92,9 @@ def register():
     # user trying to register
     if request.method == "POST":
 
+        # variables
+        student_flag = 1
+
         # ensure username was submitted
         if not request.form.get("email"):
             return render_template("apology.html")
@@ -101,22 +109,26 @@ def register():
 
         # if register as a teacher verify submited key
         if request.form.get("account_type") == "teacher" :
+            student_flag = 0
             if request.form.get("teacher_key") != TEACHER_KEY:
                 return render_template("apology.html")
 
-        # Post database
-        #post = db.execute("INSERT INTO users (username, hash) VALUES (:username, :uhash)",
-        #    username=request.form["username"], uhash=pwd_context.hash(request.form.get("password")))
+        # post to database
+        post = db.execute("INSERT INTO users (email, password, student) VALUES (:email, :uhash, :student)",
+            email=request.form["email"],
+            uhash=pwd_context.hash(request.form.get("password")),
+            student = student_flag
+            )
 
-        # Post failed forward to error page
-        #if post == None:
-        #    return render_template("apology.html")
+        # post failed forward to error page
+        if post == None:
+            return render_template("apology.html")
 
         # query database for username
-        #rows = db.execute("SELECT id FROM users WHERE username = :username", username=request.form.get("username"))
+        rows = db.execute("SELECT user_id FROM users WHERE email = :email", email=request.form.get("email"))
 
         # remember which user has logged in
-        #session["user_id"] = rows[0]["id"]
+        session["user_id"] = rows[0]["user_id"]
 
         # redirect user to home page
         return render_template("index.html")
@@ -133,5 +145,5 @@ def logout():
     session.clear()
 
     # redirect user to login form
-    return redirect(url_for("login"))
+    return render_template("login.html")
 
