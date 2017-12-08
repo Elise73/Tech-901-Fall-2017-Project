@@ -86,7 +86,7 @@ def register():
     if request.method == "POST":
 
         # variables
-        student_flag = 1
+        teacher_flag = 1
 
         # ensure username was submitted
         if not request.form.get("email"):
@@ -102,15 +102,16 @@ def register():
 
         # if register as a teacher verify submited key
         if request.form.get("account_type") == "teacher" :
-            student_flag = 0
+            teacher_flag = 0
             if request.form.get("teacher_key") != TEACHER_KEY:
                 return render_template("apology.html")
 
         # post to database
-        post = db.execute("INSERT INTO users (email, password, teacher) VALUES (:email, :uhash, :student)",
+ 
+        post = db.execute("INSERT INTO users (email, password, teacher) VALUES (:email, :uhash, :teacher)",
             email=request.form["email"],
             uhash=pwd_context.hash(request.form.get("password")),
-            student = student_flag
+            teacher = teacher_flag
             )
 
         # post failed forward to error page
@@ -139,4 +140,5 @@ def logout():
 
     # redirect user to login form
     return render_template("login.html")
+
 
