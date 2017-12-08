@@ -143,3 +143,19 @@ def logout():
     return render_template("login.html")
 
 
+@app.route("/question", methods=["GET", "POST"])
+@login_required
+def question():
+
+    #make sure a question is asked
+    if request.method == "GET":
+        return render_template("question.html")
+    if request.method == "POST":
+        if not request.form.get("title"):
+            return apology("must provide a title")
+
+        # post question to database
+        db.execute("INSERT INTO questions (title, description, user_id) VALUES(:title, :description, :user_id)",
+                    title = request.form.get("title"), description = request.form.get("description"), user_id=session["user_id"])
+        #return to some page
+    return redirect(url_for("index"))
