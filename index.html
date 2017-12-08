@@ -1,0 +1,11 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Home
+{% endblock %}
+
+{% block main %}
+<div class="container">
+<a href="{{ url_for('question') }}">Post a question</a>
+</div>
+{% endblock %}
