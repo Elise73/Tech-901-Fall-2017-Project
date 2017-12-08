@@ -49,23 +49,16 @@ def login():
     # if user reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
 
-        # ensure username was submitted
-        if not request.form.get("email"):
-            return render_template("apology.html")
-            # return apology("must provide username")
-
-        # ensure password was submitted
-        elif not request.form.get("password"):
-            return render_template("apology.html")
-            # return apology("must provide password")
+        # HTML form requires that users input data in both fields before the form is submitted
 
         # # query database for username
-        # rows = db.execute("SELECT * FROM users WHERE username = :username", username=request.form.get("username"))
+        ## select for username or email? Not sure yet
+        rows = db.execute("SELECT * FROM users WHERE email = :email", email=request.form.get("email"))
 
         # # ensure username exists and password is correct
-        # if len(rows) != 1 or not pwd_context.verify(request.form.get("password"), rows[0]["hash"]):
-        #     return render_template("apology.html")
-        #     # return apology("invalid username and/or password")
+        if len(rows) != 1 or not pwd_context.verify(request.form.get("password"), rows[0]["hash"]):
+            # return some sort of invalid username/password message, STAY ON LOGIN PAGE
+            # jQuery shake effect: https://www.formget.com/form-shake-effect-on-invalid-entry-using-jquery/
 
         # temp user id for mock login
         id = 123
@@ -114,6 +107,7 @@ def register():
                 return render_template("apology.html")
 
         # post to database
+ 
         post = db.execute("INSERT INTO users (email, password, teacher) VALUES (:email, :uhash, :teacher)",
             email=request.form["email"],
             uhash=pwd_context.hash(request.form.get("password")),
