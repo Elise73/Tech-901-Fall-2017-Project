@@ -56,7 +56,8 @@ def login():
         rows = db.execute("SELECT * FROM users WHERE email = :email", email=request.form.get("email"))
 
         # # ensure username exists and password is correct
-        if len(rows) != 1 or not pwd_context.verify(request.form.get("password"), rows[0]["hash"]):
+        if len(rows) != 1 or not pwd_context.verify(request.form.get("password"), rows[0]["password"]):
+            return render_template("apology.html")
             # return some sort of invalid username/password message, STAY ON LOGIN PAGE
             # jQuery shake effect: https://www.formget.com/form-shake-effect-on-invalid-entry-using-jquery/
 
@@ -107,7 +108,7 @@ def register():
                 return render_template("apology.html")
 
         # post to database
- 
+
         post = db.execute("INSERT INTO users (email, password, teacher) VALUES (:email, :uhash, :teacher)",
             email=request.form["email"],
             uhash=pwd_context.hash(request.form.get("password")),
