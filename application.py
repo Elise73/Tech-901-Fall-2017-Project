@@ -49,7 +49,16 @@ def login():
     # if user reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
 
-        # HTML form requires that users input data in both fields before the form is submitted
+        #login form checks form submissions. Working on wiggle function
+        # ensure username was submitted
+        #if not request.form.get("email"):
+            #return render_template("apology.html")
+            # return apology("must provide username")
+
+        # ensure password was submitted
+        #elif not request.form.get("password"):
+            #return render_template("apology.html")
+            # return apology("must provide password")
 
         # query database for username
         rows = db.execute("SELECT * FROM users WHERE email = :email", email=request.form.get("email"))
@@ -109,7 +118,6 @@ def register():
                 return render_template("apology.html")
 
         # post to database
-
         post = db.execute("INSERT INTO users (email, password, teacher) VALUES (:email, :uhash, :teacher)",
             email=request.form["email"],
             uhash=pwd_context.hash(request.form.get("password")),
@@ -143,3 +151,20 @@ def logout():
     # redirect user to login form
     return render_template("login.html")
 
+
+@app.route("/question", methods=["GET", "POST"])
+@login_required
+def question():
+
+    #make sure a question is asked
+    if request.method == "GET":
+        return render_template("question.html")
+    if request.method == "POST":
+        if not request.form.get("title"):
+            return apology("must provide a title")
+
+        # post question to database
+        db.execute("INSERT INTO question (title, description, id) VALUES(:title, :description, :id)",
+                    title = request.form.get("title"), description = request.form.get("description"), id=session["user_id"])
+        #return to some page
+    return redirect(url_for("index"))

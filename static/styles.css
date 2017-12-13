@@ -12,6 +12,22 @@
     margin-left: auto;
     margin-right: auto;
     text-align: center;
+    margin-top: 20px;
+
+}
+
+/* adjusting image size and placement */
+img
+{
+    height: 80px;
+    margin-top: -5px;
+    margin-left: -25px;
+}
+
+/* navbar sizing */
+.navbar-header
+{
+    height: 100px;
 }
 
 .error
@@ -41,6 +57,7 @@ main .form-control
 {
     /* center form controls */
     display: inline-block;
+
 
     /* override Bootstrap's 100% width for form controls */
     width: auto;
