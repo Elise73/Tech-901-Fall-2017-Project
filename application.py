@@ -49,16 +49,7 @@ def login():
     # if user reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
 
-        #login form checks form submissions. Working on wiggle function
-        # ensure username was submitted
-        #if not request.form.get("email"):
-            #return render_template("apology.html")
-            # return apology("must provide username")
-
-        # ensure password was submitted
-        #elif not request.form.get("password"):
-            #return render_template("apology.html")
-            # return apology("must provide password")
+        # HTML form requires that users input data in both fields before the form is submitted
 
         # query database for username
         rows = db.execute("SELECT * FROM users WHERE email = :email", email=request.form.get("email"))
