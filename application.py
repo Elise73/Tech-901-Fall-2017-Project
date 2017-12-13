@@ -145,6 +145,7 @@ def logout():
 
 @app.route("/question", methods=["GET", "POST"])
 @login_required
+@student_required
 def question():
 
     #make sure a question is asked
