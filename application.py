@@ -30,10 +30,25 @@ Session(app)
 # configure CS50 Library to use SQLite database
 db = SQL("sqlite:///helpdesk.db")
 
+@app.route("/answer")
+@login_required
+def answer():
+    return redirect(url_for("index"))
+
 @app.route("/")
 @login_required
 def index():
     """Home Page"""
+    rows = db.execute("SELECT * FROM users WHERE user_id = :uid",uid = session["user_id"])
+    if rows[0]["teacher"] == 1:
+        rows2 = db.execute("SELECT * FROM questions WHERE answered = 0");
+        rtn_list = []
+        for row in rows2:
+            rows3 = db.execute("SELECT * FROM users WHERE user_id = :uid",uid=row["user_id"])
+            post_user = rows3[0]["email"]
+            rtn_list.append([row["title"],post_user,row["date"], row["body"], row["thread_id"]])
+        return render_template("index_teacher.html",results = rtn_list)
+
     return render_template("index.html")
 
 
@@ -70,7 +85,7 @@ def login():
             session["teacher"] = 1
 
         # returns user to index
-        return render_template("index.html")
+        return redirect(url_for("index"))
 
     # else if user reached route via GET (as by clicking a link or via redirect)
     else:
@@ -88,7 +103,7 @@ def register():
     if request.method == "POST":
 
         # variables
-        teacher_flag = 1
+        teacher_flag = 0
 
         # ensure username was submitted
         if not request.form.get("email"):
@@ -104,7 +119,7 @@ def register():
 
         # if register as a teacher verify submited key
         if request.form.get("account_type") == "teacher" :
-            teacher_flag = 0
+            teacher_flag = 1
             if request.form.get("teacher_key") != TEACHER_KEY:
                 return render_template("apology.html")
 
@@ -126,7 +141,7 @@ def register():
         session["user_id"] = rows[0]["user_id"]
 
         # redirect user to home page
-        return render_template("index.html")
+        return redirect(url_for("index"))
 
     # user loading page
     if request.method == "GET":
@@ -155,7 +170,7 @@ def question():
             return apology("must provide a title")
 
         # post question to database
-        db.execute("INSERT INTO question (title, description, id) VALUES(:title, :description, :id)",
-                    title = request.form.get("title"), description = request.form.get("description"), id=session["user_id"])
+        db.execute("INSERT INTO questions (title, description, user_id, answered) VALUES(:title, :description, :uid, :answered)",
+                    title = request.form.get("title"), description = request.form.get("description"), uid=session["user_id"], answered = 0)
         #return to some page
     return redirect(url_for("index"))
