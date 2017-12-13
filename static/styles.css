@@ -24,6 +24,31 @@ img
     margin-left: -25px;
 }
 
+.question-card
+{
+    border: 2px solid #ccd3e0;
+    border-radius: 5px;
+    margin-bottom: 5px;
+    background-color: #ccd3e0;
+}
+.question-card-title
+{
+
+    text-align: center;
+    vertical-align: top;
+}
+.question-card-description
+{
+
+    background-color: white;
+    text-align: left;
+}
+.question-card-link
+{
+
+    background-color: white;
+}
+
 /* navbar sizing */
 .navbar-header
 {
