@@ -55,8 +55,7 @@ def index():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Log user in."""
-    ### Custom apologies commented out for reference until decision made whether to issue generic, custom, or
-    ### no apologies (as opposed to another type of error page). Generic apologies used for now, for consistency.
+    
 
     # forget any user_id
     session.clear()
