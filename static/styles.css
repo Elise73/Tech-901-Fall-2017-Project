@@ -1,3 +1,10 @@
+.btn
+{
+    margin-top: 15px;
+    margin-bottom: 15px;
+
+}
+
 
 .container
 {
@@ -21,6 +28,11 @@ img
 .navbar-header
 {
     height: 100px;
+}
+
+.error
+{
+    color: red;
 }
 
 /* colors for navbar */
