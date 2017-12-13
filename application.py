@@ -51,22 +51,23 @@ def login():
 
         # HTML form requires that users input data in both fields before the form is submitted
 
-        # # query database for username
-        ## select for username or email? Not sure yet
+        # query database for username
         rows = db.execute("SELECT * FROM users WHERE email = :email", email=request.form.get("email"))
 
-        # # ensure username exists and password is correct
+        # ensure username exists and password is correct
         if len(rows) != 1 or not pwd_context.verify(request.form.get("password"), rows[0]["password"]):
-            return render_template("apology.html")
-            # return some sort of invalid username/password message, STAY ON LOGIN PAGE
-            # jQuery shake effect: https://www.formget.com/form-shake-effect-on-invalid-entry-using-jquery/
-
-        # temp user id for mock login
-        id = 123
+            return render_template("login.html", error="Invalid username or password. Please try again.")
 
         # remember which user has logged in
-        # session["user_id"] = rows[0]["id"]
-        session["user_id"] = id
+        session["user_id"] = rows[0]["user_id"]
+
+        if rows[0]["teacher"] == 0:
+            #assign student decorator
+            session["teacher"] = 0
+
+        else:
+            #assign teacher decorator
+            session["teacher"] = 1
 
         # returns user to index
         return render_template("index.html")
@@ -141,5 +142,4 @@ def logout():
 
     # redirect user to login form
     return render_template("login.html")
-
 
