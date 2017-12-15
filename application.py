@@ -1,4 +1,5 @@
 import time
+import datetime
 from cs50 import SQL
 from flask import Flask, redirect, render_template, request, session, url_for
 from flask_session import Session
@@ -22,17 +23,33 @@ if app.config["DEBUG"]:
         return response
 
 # configure session to use filesystem (instead of signed cookies)
-app.config["SESSION_FILE_DIR"] = mkdtemp()
+app.config["SESSION_FILE_DIR"]  = mkdtemp()
 app.config["SESSION_PERMANENT"] = False
-app.config["SESSION_TYPE"] = "filesystem"
+app.config["SESSION_TYPE"]  = "filesystem"
 Session(app)
 
 # configure CS50 Library to use SQLite database
 db = SQL("sqlite:///helpdesk.db")
 
-@app.route("/answer")
+@app.route("/answer", methods=["GET", "POST"])
 @login_required
 def answer():
+
+    if request.method == "POST":
+        thread_id = request.form.get("thread_id")
+        rows = db.execute("SELECT * FROM questions WHERE thread_id = :thread_id", thread_id = thread_id)
+        row = rows[0]
+        rtn = [row["title"],row["user_id"],row["date"],row["body"],thread_id]
+        return render_template("answer.html", row = rtn )
+
+@app.route("/postanswer", methods=["POST"])
+@login_required
+def postanswer():
+    thread_id = request.form.get("thread_id")
+    body = request.form.get("body")
+    uid = session["user_id"]
+
+    rows = db.execute("INSERT INTO post (thread_id, body, user_id) VALUES (:thread_id, :body, :user_id) ", thread_id = thread_id, body = body, user_id = uid)
     return redirect(url_for("index"))
 
 @app.route("/")
@@ -40,6 +57,7 @@ def answer():
 def index():
     """Home Page"""
     rows = db.execute("SELECT * FROM users WHERE user_id = :uid",uid = session["user_id"])
+
     if rows[0]["teacher"] == 1:
         rows2 = db.execute("SELECT * FROM questions WHERE answered = 0");
         rtn_list = []
@@ -49,7 +67,16 @@ def index():
             rtn_list.append([row["title"],post_user,row["date"], row["body"], row["thread_id"]])
         return render_template("index_teacher.html",results = rtn_list)
 
-    return render_template("index.html")
+    else:
+
+        rtn = db.execute("SELECT * FROM questions WHERE user_id = :uid", uid = session["user_id"])
+        rtn_list = []
+        for row in rtn:
+            rows3 = db.execute("SELECT * FROM users WHERE user_id = :uid",uid=row["user_id"])
+            post_user = rows3[0]["email"]
+            rtn_list.append([row["title"],post_user,row["date"], row["body"], row["thread_id"]])
+        return render_template("index.html", user_question = rtn)
+
 
 
 @app.route("/login", methods=["GET", "POST"])
@@ -170,7 +197,7 @@ def question():
             return apology("must provide a title")
 
         # post question to database
-        db.execute("INSERT INTO questions (title, description, user_id, answered) VALUES(:title, :description, :uid, :answered)",
-                    title = request.form.get("title"), description = request.form.get("description"), uid=session["user_id"], answered = 0)
+        db.execute("INSERT INTO questions (title, body, user_id, answered) VALUES(:title, :body, :uid, :answered)",
+                    title = request.form.get("title"), body = request.form.get("description"), uid=session["user_id"], answered = 0)
         #return to some page
     return redirect(url_for("index"))
