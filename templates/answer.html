@@ -1,0 +1,33 @@
+{% extends "layout.html" %}
+
+{% block title %}
+    Question
+{% endblock %}
+
+{% block main %}
+
+<h1> THREAD ID: {{ row[4] }} </h1>
+
+<div class="question-card">
+<!-- row[0] = title | row[1] = username | row[2] = post date | row[3] = question | row[4] = theadid -->
+    <div class="question-card-title">
+        <h4> {{ row[0] }}</h4>
+        <h6> {{ row[1] }} asked on {{ row[2] }}.</h5>
+    </div>
+    <div class="question-card-description">
+        <p> {{ row[3] }} </p>
+    </div>
+</div>
+
+<form action="{{ url_for('postanswer') }}" method="post">
+        <fieldset>
+            <div class="form-group" style="height:400px;">
+                <textarea style="height:400px; resize:none; width:400px" name="body"placeholder = "Post your reply"/></textarea>
+            </div>
+            <div class="form-group">
+                <button class="btn btn-default" type="submit" name="thread_id" value="{{ row[4] }}">Post Reply</button>
+            </div>
+        </fieldset>
+    </form>
+
+{% endblock %}
