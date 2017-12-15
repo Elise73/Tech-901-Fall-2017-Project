@@ -174,4 +174,3 @@ def question():
                     title = request.form.get("title"), description = request.form.get("description"), uid=session["user_id"], answered = 0)
         #return to some page
     return redirect(url_for("index"))
-
