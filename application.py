@@ -1,4 +1,5 @@
 import time
+import datetime
 from cs50 import SQL
 from flask import Flask, redirect, render_template, request, session, url_for
 from flask_session import Session
@@ -22,26 +23,66 @@ if app.config["DEBUG"]:
         return response
 
 # configure session to use filesystem (instead of signed cookies)
-app.config["SESSION_FILE_DIR"] = mkdtemp()
+app.config["SESSION_FILE_DIR"]  = mkdtemp()
 app.config["SESSION_PERMANENT"] = False
-app.config["SESSION_TYPE"] = "filesystem"
+app.config["SESSION_TYPE"]  = "filesystem"
 Session(app)
 
 # configure CS50 Library to use SQLite database
 db = SQL("sqlite:///helpdesk.db")
 
+@app.route("/answer", methods=["GET", "POST"])
+@login_required
+def answer():
+
+    if request.method == "POST":
+        thread_id = request.form.get("thread_id")
+        rows = db.execute("SELECT * FROM questions WHERE thread_id = :thread_id", thread_id = thread_id)
+        row = rows[0]
+        rtn = [row["title"],row["user_id"],row["date"],row["body"],thread_id]
+        return render_template("answer.html", row = rtn )
+
+@app.route("/postanswer", methods=["POST"])
+@login_required
+def postanswer():
+    thread_id = request.form.get("thread_id")
+    body = request.form.get("body")
+    uid = session["user_id"]
+
+    rows = db.execute("INSERT INTO post (thread_id, body, user_id) VALUES (:thread_id, :body, :user_id) ", thread_id = thread_id, body = body, user_id = uid)
+    return redirect(url_for("index"))
+
 @app.route("/")
 @login_required
 def index():
     """Home Page"""
-    return render_template("index.html")
+    rows = db.execute("SELECT * FROM users WHERE user_id = :uid",uid = session["user_id"])
+
+    if rows[0]["teacher"] == 1:
+        rows2 = db.execute("SELECT * FROM questions WHERE answered = 0");
+        rtn_list = []
+        for row in rows2:
+            rows3 = db.execute("SELECT * FROM users WHERE user_id = :uid",uid=row["user_id"])
+            post_user = rows3[0]["email"]
+            rtn_list.append([row["title"],post_user,row["date"], row["body"], row["thread_id"]])
+        return render_template("index_teacher.html",results = rtn_list)
+
+    else:
+
+        rtn = db.execute("SELECT * FROM questions WHERE user_id = :uid", uid = session["user_id"])
+        rtn_list = []
+        for row in rtn:
+            rows3 = db.execute("SELECT * FROM users WHERE user_id = :uid",uid=row["user_id"])
+            post_user = rows3[0]["email"]
+            rtn_list.append([row["title"],post_user,row["date"], row["body"], row["thread_id"]])
+        return render_template("index.html", user_question = rtn)
+
 
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Log user in."""
-    ### Custom apologies commented out for reference until decision made whether to issue generic, custom, or
-    ### no apologies (as opposed to another type of error page). Generic apologies used for now, for consistency.
+
 
     # forget any user_id
     session.clear()
@@ -49,33 +90,28 @@ def login():
     # if user reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
 
-        # ensure username was submitted
-        if not request.form.get("email"):
-            return render_template("apology.html")
-            # return apology("must provide username")
+        # HTML form requires that users input data in both fields before the form is submitted
 
-        # ensure password was submitted
-        elif not request.form.get("password"):
-            return render_template("apology.html")
-            # return apology("must provide password")
-
-        # # query database for username
+        # query database for username
         rows = db.execute("SELECT * FROM users WHERE email = :email", email=request.form.get("email"))
 
-        # # ensure username exists and password is correct
-        if len(rows) != 1 or not pwd_context.verify(request.form.get("password"), rows[0]["hash"]):
-            return render_template("apology.html")
-            #return apology("invalid username and/or password")
-
-        # temp user id for mock login
-        id = 123
+        # ensure username exists and password is correct
+        if len(rows) != 1 or not pwd_context.verify(request.form.get("password"), rows[0]["password"]):
+            return render_template("login.html", error="Invalid username or password. Please try again.")
 
         # remember which user has logged in
-        # session["user_id"] = rows[0]["id"]
-        session["user_id"] = id
+        session["user_id"] = rows[0]["user_id"]
+
+        if rows[0]["teacher"] == 0:
+            #assign student decorator
+            session["teacher"] = 0
+
+        else:
+            #assign teacher decorator
+            session["teacher"] = 1
 
         # returns user to index
-        return render_template("index.html")
+        return redirect(url_for("index"))
 
     # else if user reached route via GET (as by clicking a link or via redirect)
     else:
@@ -93,7 +129,7 @@ def register():
     if request.method == "POST":
 
         # variables
-        teacher_flag = 1
+        teacher_flag = 0
 
         # ensure username was submitted
         if not request.form.get("email"):
@@ -109,7 +145,7 @@ def register():
 
         # if register as a teacher verify submited key
         if request.form.get("account_type") == "teacher" :
-            teacher_flag = 0
+            teacher_flag = 1
             if request.form.get("teacher_key") != TEACHER_KEY:
                 return render_template("apology.html")
 
@@ -131,7 +167,7 @@ def register():
         session["user_id"] = rows[0]["user_id"]
 
         # redirect user to home page
-        return render_template("index.html")
+        return redirect(url_for("index"))
 
     # user loading page
     if request.method == "GET":
@@ -150,6 +186,7 @@ def logout():
 
 @app.route("/question", methods=["GET", "POST"])
 @login_required
+@student_required
 def question():
 
     #make sure a question is asked
@@ -160,7 +197,24 @@ def question():
             return apology("must provide a title")
 
         # post question to database
-        db.execute("INSERT INTO question (title, description, id) VALUES(:title, :description, :id)",
-                    title = request.form.get("title"), description = request.form.get("description"), id=session["user_id"])
+        db.execute("INSERT INTO questions (title, body, user_id, answered) VALUES(:title, :body, :uid, :answered)",
+                    title = request.form.get("title"), body = request.form.get("description"), uid=session["user_id"], answered = 0)
+        #return to some page
+    return redirect(url_for("index"))
+
+@app.route("/response", methods=["GET", "POST"])
+@login_required
+def response():
+
+    #ensure valid question is selected and exists
+    if request.method == "GET":
+        return render_template("response.html")
+    if request.method == "POST":
+        if not request.form.get("response"):
+            return apology("please submit answer")
+
+        # post answer to correct question and to database
+        db.execute("INSERT INTO post (title, body, id, thread, post) VALUES(:title, :body, :id, :thread, :post)",
+                    title = request.form.get("title"), body = request.form.get("body"), id=session["user_id"])
         #return to some page
     return redirect(url_for("index"))
