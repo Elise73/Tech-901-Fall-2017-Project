@@ -169,7 +169,7 @@ def question():
             return apology("must provide a title")
 
         # post question to database
-        db.execute("INSERT INTO questions (title, description, user_id, answered) VALUES(:title, :description, :uid, :answered)",
-                    title = request.form.get("title"), description = request.form.get("description"), uid=session["user_id"], answered = 0)
+        db.execute("INSERT INTO questions (title, body, user_id, answered) VALUES(:title, :body, :uid, :answered)",
+                    title = request.form.get("title"), body = request.form.get("description"), uid=session["user_id"], answered = 0)
         #return to some page
     return redirect(url_for("index"))
