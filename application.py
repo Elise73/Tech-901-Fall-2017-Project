@@ -55,7 +55,7 @@ def index():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     """Log user in."""
-    
+
 
     # forget any user_id
     session.clear()
@@ -174,3 +174,4 @@ def question():
                     title = request.form.get("title"), description = request.form.get("description"), uid=session["user_id"], answered = 0)
         #return to some page
     return redirect(url_for("index"))
+
