@@ -24,12 +24,19 @@ img
     margin-left: -25px;
 }
 
+/* On mouse-over, add a deeper shadow */
+.question-card:hover {
+    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
+}
 .question-card
 {
-    border: 2px solid #ccd3e0;
-    border-radius: 5px;
-    margin-bottom: 5px;
-    background-color: #ccd3e0;
+     /* Add shadows to create the "card" effect */
+    box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+    transition: 0.3s;
+    border-radius: 5px 5px 0 0;
+    padding-top: 2px;
+    background-color: whitesmoke;
+    margin-bottom: 15px;
 }
 .question-card-title
 {
@@ -42,11 +49,7 @@ img
 
     background-color: white;
     text-align: left;
-}
-.question-card-link
-{
-
-    background-color: white;
+    padding: 2px 16px;
 }
 
 /* navbar sizing */
@@ -58,24 +61,6 @@ img
 .error
 {
     color: red;
-}
-
-/* colors for navbar */
-.navbar-default .navbar-brand .blue
-{
-    color: #537fbe;
-}
-.navbar-default .navbar-brand .red
-{
-    color: #ea433b;
-}
-.navbar-default .navbar-brand .yellow
-{
-    color: #f5b82e;
-}
-.navbar-default .navbar-brand .green
-{
-    color: #2e944b;
 }
 
 main .form-control

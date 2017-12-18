@@ -36,20 +36,46 @@ db = SQL("sqlite:///helpdesk.db")
 def answer():
 
     if request.method == "POST":
+
         thread_id = request.form.get("thread_id")
+
+        # get question info
         rows = db.execute("SELECT * FROM questions WHERE thread_id = :thread_id", thread_id = thread_id)
         row = rows[0]
-        rtn = [row["title"],row["user_id"],row["date"],row["body"],thread_id]
-        return render_template("answer.html", row = rtn )
+        question = [row["title"],row["user_id"],row["date"],row["body"]]
+
+        # get post info
+        rows = db.execute("SELECT * FROM post WHERE thread_id = :thread_id", thread_id = thread_id)
+        posts = []
+        for row in rows:
+            posts.append(row["body"])
+
+        #rtn = [thread_id, question, posts]
+        return render_template("answer.html", question = question, posts = posts, thread_id = thread_id )
 
 @app.route("/postanswer", methods=["POST"])
 @login_required
 def postanswer():
+
     thread_id = request.form.get("thread_id")
     body = request.form.get("body")
     uid = session["user_id"]
 
-    rows = db.execute("INSERT INTO post (thread_id, body, user_id) VALUES (:thread_id, :body, :user_id) ", thread_id = thread_id, body = body, user_id = uid)
+    user_type = db.execute("SELECT * FROM users WHERE user_id = :uid",uid = uid)
+    db.execute("INSERT INTO post (thread_id, body, user_id) VALUES (:thread_id, :body, :user_id) ", thread_id = thread_id, body = body, user_id = uid)
+
+    if user_type[0]["teacher"] == 1:
+        db.execute("UPDATE questions SET teacher_last = 1 WHERE thread_id = :thread_id", thread_id = thread_id)
+        return redirect(url_for("index"))
+    else:
+        db.execute("UPDATE questions SET teacher_last = 0 WHERE thread_id = :thread_id", thread_id = thread_id)
+        return redirect(url_for("index"))
+
+@app.route("/mark", methods=["POST"])
+@login_required
+def mark():
+    thread_id = request.form.get("thread_id")
+    db.execute("UPDATE questions SET answered = 1 WHERE thread_id = :thread_id", thread_id = thread_id)
     return redirect(url_for("index"))
 
 @app.route("/")
@@ -59,7 +85,7 @@ def index():
     rows = db.execute("SELECT * FROM users WHERE user_id = :uid",uid = session["user_id"])
 
     if rows[0]["teacher"] == 1:
-        rows2 = db.execute("SELECT * FROM questions WHERE answered = 0");
+        rows2 = db.execute("SELECT * FROM questions WHERE answered = 0 AND teacher_last = 0");
         rtn_list = []
         for row in rows2:
             rows3 = db.execute("SELECT * FROM users WHERE user_id = :uid",uid=row["user_id"])
@@ -69,13 +95,13 @@ def index():
 
     else:
 
-        rtn = db.execute("SELECT * FROM questions WHERE user_id = :uid", uid = session["user_id"])
+        rtn = db.execute("SELECT * FROM questions WHERE user_id = :uid AND teacher_last = 1 AND answered = 0", uid = session["user_id"])
         rtn_list = []
         for row in rtn:
             rows3 = db.execute("SELECT * FROM users WHERE user_id = :uid",uid=row["user_id"])
             post_user = rows3[0]["email"]
             rtn_list.append([row["title"],post_user,row["date"], row["body"], row["thread_id"]])
-        return render_template("index.html", user_question = rtn)
+        return render_template("index.html", user_question = rtn_list)
 
 
 
@@ -83,15 +109,9 @@ def index():
 def login():
     """Log user in."""
 
-
-    # forget any user_id
     session.clear()
 
-    # if user reached route via POST (as by submitting a form via POST)
     if request.method == "POST":
-
-        # HTML form requires that users input data in both fields before the form is submitted
-
         # query database for username
         rows = db.execute("SELECT * FROM users WHERE email = :email", email=request.form.get("email"))
 
@@ -196,7 +216,7 @@ def question():
             return apology("must provide a title")
 
         # post question to database
-        db.execute("INSERT INTO questions (title, description, user_id, answered) VALUES(:title, :description, :uid, :answered)",
+        db.execute("INSERT INTO questions (title, body, user_id, answered) VALUES(:title, :description, :uid, :answered)",
                     title = request.form.get("title"), description = request.form.get("description"), uid=session["user_id"], answered = 0)
         #return to some page
     return redirect(url_for("index"))

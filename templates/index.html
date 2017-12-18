@@ -6,28 +6,34 @@
 
 {% block main %}
 <div class="container">
-<a href="{{ url_for('question') }}">Post a question</a>
 
-<div> STUDENT </div>
-    {% for row in user_questions %}
-    <div class="question-card">
-<!-- row[0] = title | row[1] = username | row[2] = post date | row[3] = question | row[4] = theadid -->
-        <h1> THREAD ID: {{ row[4] }} </h1>
-        <div class="question-card-title">
-            <h4> {{ row[0] }}</h4>
-            <h6> {{ row[1] }} asked on {{ row[2] }}.</h5>
+    <form action="{{ url_for('question') }}" method="get">
+        <div class="form-group">
+            <button class="btn btn-default" type="submit">Ask Question</button>
         </div>
-        <div class="question-card-description">
-            <p> {{ row[3] }}</p>
-            <form action="{{ url_for('answer') }}" method="post">
-                <div class="form-group">
-                    <button class="btn btn-default" type="submit" name="thread_id" value="{{ row[4] }}">Answer Question</button>
-                </div>
-            </form>
+    </form>
+
+    {% if user_question %}
+        <h1>Action Required</h1>
+    {% endif %}
+
+    {% for row in user_question %}
+        <div class="question-card">
+    <!-- row[0] = title | row[1] = username | row[2] = post date | row[3] = question | row[4] = theadid -->
+            <div class="question-card-title">
+                <h4> {{ row[0] }}</h4>
+                <h6> <b>{{ row[1] }}</b> asked on {{ row[2] }}.</h5>
+            </div>
+            <div class="question-card-description">
+                <p> {{ row[3] }}</p>
+                <form action="{{ url_for('answer') }}" method="post">
+                    <div class="form-group">
+                        <button class="btn btn-default center-block" type="submit" name="thread_id" value="{{ row[4] }}">View Question Thread</button>
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
     {% endfor %}
-
 
 </div>
 {% endblock %}
