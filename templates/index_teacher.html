@@ -6,11 +6,17 @@
 
 {% block main %}
 <div class="container-fluid">
-        <div> TEACHER </div>
+
+        {% if results %}
+                <h1>Action Required</h1>
+        {% else %}
+                <h1>No Questions!</h1>
+        {% endif %}
+
+
         {% for row in results %}
         <div class="question-card">
 <!-- row[0] = title | row[1] = username | row[2] = post date | row[3] = question | row[4] = theadid -->
-                <h1> THREAD ID: {{ row[4] }} </h1>
                 <div class="question-card-title">
                         <h4> {{ row[0] }}</h4>
                         <h6> {{ row[1] }} asked on {{ row[2] }}.</h5>
@@ -19,7 +25,7 @@
                         <p> {{ row[3] }}</p>
                         <form action="{{ url_for('answer') }}" method="post">
                                 <div class="form-group">
-                                        <button class="btn btn-default" type="submit" name="thread_id" value="{{ row[4] }}">Answer Question</button>
+                                        <button class="btn btn-default center-block" type="submit" name="thread_id" value="{{ row[4] }}">View Question Thread</button>
                                 </div>
                         </form>
                 </div>

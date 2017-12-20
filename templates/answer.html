@@ -6,18 +6,31 @@
 
 {% block main %}
 
-<h1> THREAD ID: {{ row[4] }} </h1>
-
 <div class="question-card">
-<!-- row[0] = title | row[1] = username | row[2] = post date | row[3] = question | row[4] = theadid -->
     <div class="question-card-title">
-        <h4> {{ row[0] }}</h4>
-        <h6> {{ row[1] }} asked on {{ row[2] }}.</h5>
+        <h4> {{ question[0] }}</h4>
+        <h6> {{ question[1] }} asked on {{ question[2] }}.</h5>
     </div>
     <div class="question-card-description">
-        <p> {{ row[3] }} </p>
+        <p> {{ question[3] }} </p>
     </div>
 </div>
+
+{% for post in posts %}
+<div class="question-card">
+    <div class="question-card-title">
+    </div>
+    <div class="question-card-description">
+        <p> {{ post }} </p>
+    </div>
+</div>
+{% endfor %}
+
+<form action="{{ url_for('mark') }}" method="post">
+    <div class="form-group">
+        <button class="btn btn-default" type="submit" name="thread_id" value="{{ thread_id }}">Mark Anwsered</button>
+    </div>
+</form>
 
 <form action="{{ url_for('postanswer') }}" method="post">
         <fieldset>
@@ -25,7 +38,7 @@
                 <textarea style="height:400px; resize:none; width:400px" name="body"placeholder = "Post your reply"/></textarea>
             </div>
             <div class="form-group">
-                <button class="btn btn-default" type="submit" name="thread_id" value="{{ row[4] }}">Post Reply</button>
+                <button class="btn btn-default" type="submit" name="thread_id" value="{{ thread_id }}">Post Reply</button>
             </div>
         </fieldset>
     </form>
